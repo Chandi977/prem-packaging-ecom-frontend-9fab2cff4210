@@ -1,0 +1,152 @@
+
+ /* Fixed sidenav, full height */
+ .sidenav {
+    height: 100%;
+    width: 200px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    padding-top: 20px;
+  }
+  
+  /* Style the sidenav links and the dropdown button */
+  .sidenav a, .dropdown-btn {
+    padding: 6px 8px 6px 16px;
+    text-decoration: none;
+    font-size: 20px;
+    color: #818181;
+    display: block;
+    border: none;
+    background: none;
+    width:100%;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+  }
+  
+  /* On mouse-over */
+  .sidenav a:hover, .dropdown-btn:hover {
+    color: #f1f1f1;
+  }
+  
+  /* Main content */
+  .main {
+    margin-left: 200px; /* Same as the width of the sidenav */
+    font-size: 20px; /* Increased text to enable scrolling */
+    padding: 0px 10px;
+  }
+  
+  /* Add an active class to the active dropdown button */
+  .active {
+    background-color: green;
+    color: white;
+  }
+  
+  /* Dropdown container (hidden by default). Optional: add a lighter background color and some left padding to change the design of the dropdown content */
+  .dropdown-container {
+    display: none;
+    background-color: #262626;
+    padding-left: 8px;
+  }
+  
+  /* Optional: Style the caret down icon */
+  .fa-caret-down {
+    float: right;
+    padding-right: 8px;
+  } 
+
+  /* only windowdisplay topbar */
+.topbar{
+  
+  display:block;
+  background-color: #EAEAEA;
+  height: 32px;
+  padding: 0px !important;
+  margin: 0px !important;
+  
+}
+@media (max-width: 700px) {
+  .topbar {
+    display: none;
+  }
+}
+.header_select{
+  color: #222;
+text-align: right;
+font-family: "Montserrat", sans-serif;
+font-size: 12.045px;
+font-style: normal;
+font-weight: 400;
+border-radius:0px;
+display: flex;
+justify-content: center;
+appearance: none;
+padding-right: 12px;
+background: url('https://res.cloudinary.com/dwxqg9so3/image/upload/v1693866197/Stroke-1_ymridf.png') no-repeat right center; 
+background-size: 10px; 
+align-items: center;
+background-position: right center;
+/* border: none; */
+}
+.header-select:focus{
+  outline: none;
+}
+.header-select option{
+  color: red;
+}
+.optione{
+  font-size: 10px;
+  width: 20px;
+}
+
+.input_div{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 0px;
+  border: none;
+  padding: 0px !important;
+  margin: 0px !important;
+}
+.header_input{
+  width: 50%;
+  height: 40px;
+  border-radius: 0px;
+  border: 1px solid #cecece;
+  font-size: 12.045px;
+  font-style: normal;
+  font-weight: 400;
+  color: #222;
+  font-family: "Montserrat", sans-serif;
+  text-align: left;
+  padding-left: 12px;
+  /* box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px; */
+  border-radius: 10px;
+  padding: 0px 10px;
+}
+.header_input:focus{
+  outline: 1px solid #cecece;
+}
+.dropdown_user{
+  display: flex;
+  flex-direction: column;
+}
+
+.whatsappNo{
+  color: white;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+  font-family: "Montserrat";
+}
+
+/* @media (max-width: 1430px) {
+  .whatsappNo {
+    font-size: 11px;
+  }
+} */

@@ -1,0 +1,187 @@
+.catalogpath {
+  color: var(--h-eading, #222);
+  font-family: Montserrat;
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 21px; /* 175% */
+  text-decoration-line: underline;
+  padding: 0px;
+  margin: 0px;
+}
+.ordertext {
+  text-transform: capitalize;
+}
+
+/* mainbody */
+.mainbody {
+  margin-left: 0px !important;
+  margin-bottom: 0px !important;
+  margin-right: 0px !important;
+  padding-left: 120px !important;
+  padding-right: 120px !important;
+  background-color: white !important;
+}
+@media (max-width: 900px) {
+  .mainbody {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    background-color: #ededed !important;
+  }
+}
+.lastlayoutcouponinput {
+  width: 200px;
+  height: 36px;
+  border: 1px solid #000;
+  border-radius: 4px;
+}
+@media (max-width: 900px) {
+  .lastlayoutcouponinput {
+    width: 100%;
+  }
+}
+
+.lastlayoutcouponbtn {
+  width: 220px !important;
+  height: 36px !important;
+  background-color: #182c5a;
+  color: white !important;
+  border-radius: 4px !important;
+  border: 0px !important;
+  margin-left: 20px;
+}
+
+.lastlayoutcouponbtn:hover {
+  background-color: #e92227;
+}
+
+@media (max-width: 900px) {
+  .lastlayoutcouponbtn {
+    /* margin-left: 0px;   */
+    /* margin-top: 20px; */
+    width: "210px";
+  }
+}
+
+.lastlayoutfirsthalf {
+  display: flex;
+}
+
+.addressdetailcard {
+  width: 45%;
+  height: auto;
+  min-height: 230px;
+  padding: 10px !important;
+}
+@media (max-width: 900px) {
+  .addressdetailcard {
+    width: 80%;
+    height: auto;
+    padding: 10px !important;
+    margin-left: 25px;
+  }
+}
+
+.billinglayout {
+  display: flex;
+}
+
+.biling_right {
+  width: 50%;
+  border: 1px solid black;
+}
+@media (max-width: 900px) {
+  .billinglayout {
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 8.17px;
+    border: 0.817px solid rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 900px) {
+  .ordertext {
+    font-size: 12px;
+    text-transform: capitalize;
+  }
+}
+
+@media (max-width: 900px) {
+  .placeordertext {
+    font-size: 12px;
+  }
+}
+
+.placeorderbtn {
+  width: 168px;
+  background-color: #182c5a;
+}
+
+.placeorderbtn:hover {
+  background-color: #e92227;
+}
+
+@media (max-width: 900px) {
+  .placeorderbtn {
+    width: 100%;
+  }
+}
+
+.submit {
+  background-color: #182c5a;
+}
+.submit:hover {
+  background-color: #e92227;
+}
+
+.deliverycostdiv {
+  height: 222px; /* removed quotes */
+  /* height: 325px; */ /* this line is commented out, so it won't be applied */
+  border: 1px solid #ebebeb;
+  border-top: none;
+  border-left: none;
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 915px) {
+  .deliverycostdiv {
+    height: 310px;
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 780px) {
+  .deliverycostdiv {
+    height: 355px;
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 450px) {
+  .deliverycostdiv {
+    height: 332px;
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 415px) {
+  .deliverycostdiv {
+    height: 353px;
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 391px) {
+  .deliverycostdiv {
+    height: 353px;
+    display: flex;
+    align-items: center;
+  }
+}
+@media (max-width: 361px) {
+  .deliverycostdiv {
+    height: 378px;
+    display: flex;
+    align-items: center;
+  }
+}

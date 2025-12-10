@@ -1,0 +1,58 @@
+.mainBody {
+  background-color: white;
+  padding-top: 50px;
+}
+.mainHeading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: #182c5a;
+}
+
+.form{
+  padding-inline: 20%;
+}
+.div1 {
+  height: 3px;
+  width: 420px;
+  background-color: #e92227;
+}
+.inputRow {
+  display: flex;
+  flex-direction: row;
+  gap: 30px; /* Adjust the gap as needed */
+}
+
+/* Other common styles for input fields and labels */
+.input {
+  margin-bottom: 20px; /* You can adjust the margin as needed */
+  width:1005
+}
+
+.inputHeading {
+  font-weight: bold;
+}
+
+.inputBox {
+  width: 100%; /* Adjust the width as needed */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Style for the submit button */
+.submitButton {
+  background-color: #e92227;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submitButton:hover {
+  background-color: #212529;
+}
