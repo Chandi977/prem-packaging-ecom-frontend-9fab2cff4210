@@ -1,6 +1,6 @@
 // Loader.js
 import React from "react";
-import styles from "./loader.module.css"
+import styles from "./loader.module.css";
 
 const Loader = () => {
   return (
@@ -12,4 +12,3 @@ const Loader = () => {
 };
 
 export default Loader;
-

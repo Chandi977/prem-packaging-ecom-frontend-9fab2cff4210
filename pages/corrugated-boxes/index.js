@@ -1,5 +1,11 @@
-"use client"; // This is a client component 👈🏽
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
+import dynamic from "next/dynamic";
 import styles from "./page.module.css";
 import Checkbox from "@mui/material/Checkbox";
 import Slider from "@mui/material/Slider";
@@ -9,13 +15,28 @@ import Stack from "@mui/material/Stack";
 import { getService, postService } from "../../services/service";
 import CorrugatedBanner from "../../components/landing/CorrugatedBanner";
 import { useRouter } from "next/router";
-import ListingCard from "../../components/listing/ListingCard";
-import DesktopListingCard from "../../components/listing/DesktopLisingCard";
 import Loader from "../../components/loader";
 
+/* ------------ dynamic imports (lazy) so heavy card bundles & images load later ------------ */
+const ListingCard = dynamic(
+  () => import("../../components/listing/ListingCard"),
+  {
+    loading: () => <div style={{ height: 200 }} />,
+  }
+);
+const DesktopListingCard = dynamic(
+  () => import("../../components/listing/DesktopLisingCard"),
+  { loading: () => <div style={{ height: 200 }} /> }
+);
+
+/* --------------------------
+  Server-side props (paged)
+  - fetch only first page to keep SSR payload small
+---------------------------*/
 export async function getServerSideProps(context) {
+  const initialLimit = 24;
   const searchRes = await getService(`category/all`);
-  const prod = await getService("product/all");
+  const prod = await getService(`product/get?page=1&limit=${initialLimit}`);
   const query = context.query;
 
   let brandId = null;
@@ -36,10 +57,15 @@ export async function getServerSideProps(context) {
     subCategoryId = subcategory?.[0]?._id || null;
   }
 
+  // Debug SSR props on server (will show in server console during SSR)
+  // console.log("SSR props: ", { initialLimit, prodLength: prod?.data?.data?.length, query, brandId, subCategoryId });
+
   return {
     props: {
       brand: searchRes?.data ? searchRes?.data?.data : [],
-      product: prod?.data ? prod?.data?.data : [],
+      product: prod?.data ? prod?.data?.data : [], // first page only
+      initialPage: 1,
+      initialLimit,
       category: query?.category ? query?.category : null,
       brandId: brandId,
       subCategoryId: subCategoryId,
@@ -48,6 +74,9 @@ export async function getServerSideProps(context) {
   };
 }
 
+/* --------------------------
+  Tiny constants & utils
+---------------------------*/
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
 const CustomSliderStyles = {
@@ -69,17 +98,61 @@ function valuetext(value) {
   return `${value}°C`;
 }
 
-const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
+const selectSmallStyle = {
+  paddingLeft: "12px",
+  marginRight: "10px",
+  width: "66px",
+  height: "34px",
+  backgroundColor: "white",
+  border: "1px solid #D9D9D9",
+};
+const selectSortStyle = {
+  paddingLeft: "12px",
+  width: "193px",
+  height: "34px",
+  backgroundColor: "white",
+  border: "1px solid #D9D9D9",
+};
+const brandCheckboxSx = {
+  padding: "0px",
+  color: "gray",
+  "&.Mui-checked": {
+    color: "gray",
+  },
+  "&.Mui-unchecked": {
+    color: "gray",
+  },
+};
+
+// If you know the Corrugated category ID, put it here as fallback.
+const KNOWN_CORRUGATED_ID = "6557deab301ec4f2f4266131";
+
+/* --------------------------
+  Component (pages-router / design kept)
+---------------------------*/
+const BoppTape = ({
+  brand,
+  product = [], // initial first-page products from SSR
+  category,
+  brandId,
+  subCategoryId,
+  q,
+  initialPage = 1,
+  initialLimit = 24,
+}) => {
   const router = useRouter();
-  const [products, setProducts] = useState();
+
+  /* ---------- Data buffers ---------- */
+  const [fetchedProducts, setFetchedProducts] = useState([]); // display buffer (what we render)
+  const [filteredProducts, setFilteredProducts] = useState([]); // full filtered result set (client)
+  const [useFilteredMode, setUseFilteredMode] = useState(false);
+
+  /* ---------- UI / filters / paging ---------- */
   const [length, setLength] = useState([0, 300]);
   const [breadth, setBreadth] = useState([0, 300]);
   const [height, setHeight] = useState([0, 300]);
   const [showing, setShowing] = useState(12);
-  const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [firstIndex, setFirstIndex] = useState(0);
-  const [lastIndex, setLastIndex] = useState(5);
   const [unit, setUnit] = useState("inches");
   const [isLoading, setIsLoading] = useState(false);
   const [flags, setFlags] = useState({
@@ -88,287 +161,471 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
     sort: false,
   });
 
-  const [seelctedCategories, setSelectedCategories] = useState([]);
-  const [seelctedBrand, setSelectedBrand] = useState([]);
-  const [widt, setWidt] = useState();
+  // fixed/clean names (typos fixed)
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState([]);
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+
   const breakpoint = 700;
-
   const minValue = 0;
-  const maxValue = unit === "inches" ? 20 : 300;
+  const maxValue = useMemo(() => (unit === "inches" ? 20 : 300), [unit]);
 
-  const handleLength = (event, newValue) => {
-    setLength(newValue);
-  };
+  // backend pagination state (for unfiltered mode)
+  const [backendPage, setBackendPage] = useState(initialPage);
+  const [hasMoreBackend, setHasMoreBackend] = useState(true);
+  const sentinelRef = useRef(null);
 
-  const handleBradth = (event, newValue) => {
-    setBreadth(newValue);
-  };
+  // network-control refs
+  const abortRef = useRef(null);
+  const debounceRef = useRef(null);
 
-  const handleHeight = (event, newValue) => {
-    setHeight(newValue);
-  };
-
-  const handleUnit = (event) => {
-    setUnit(event.target.value);
-  };
-
-  const handleApply = async () => {
-    setIsLoading(true);
-    try {
-      setFlags((prev) => ({
-        ...prev,
-        size: true,
-      }));
-
-      const baseData = {
-        length: {
-          min: length?.[0],
-          max: length?.[1],
-        },
-        breadth: {
-          min: breadth?.[0],
-          max: breadth?.[1],
-        },
-        height: {
-          min: height?.[0],
-          max: height?.[1],
-        },
-        unit: unit,
-      };
-
-      const data = flags?.category
-        ? {
-            ...baseData,
-            category: seelctedCategories,
-          }
-        : baseData;
-
-      const dat = await postService("/product/filter", data);
-      setProducts(dat?.data?.data);
-    } catch (error) {
-      console.error("Error occurred:", error);
-    } finally {
-      setIsLoading(false);
+  /* ---------- helper: isCorrugated ---------- */
+  const isCorrugated = useCallback((p) => {
+    if (!p) return false;
+    if (p.category && typeof p.category === "object") {
+      return String(p.category.name || "").toLowerCase() === "corrugated box";
     }
-  };
-
-  useEffect(() => {
-    // Filter products by category "Corrugated Box"
-    if (product) {
-      const corrugatedBoxProducts = product.filter(
-        (prod) => prod.category?.name === "Corrugated Box"
-      );
-      setProducts(corrugatedBoxProducts);
+    if (typeof p.category === "string") {
+      return p.category === KNOWN_CORRUGATED_ID;
     }
-  }, [product]);
-
-  const filterProducts = async (cat) => {
-    setFlags((prev) => ({
-      ...prev,
-      category: true,
-    }));
-
-    if (flags?.size) {
-      const temp = [...seelctedCategories];
-      const index = temp.findIndex((item) => item === cat);
-
-      if (index === -1) {
-        temp.push(cat);
-      } else {
-        temp.splice(index, 1);
-      }
-
-      setSelectedCategories(temp);
-
-      const data = {
-        length: {
-          min: length?.[0],
-          max: length?.[1],
-        },
-        breadth: {
-          min: breadth?.[0],
-          max: breadth?.[1],
-        },
-        height: {
-          min: height?.[0],
-          max: height?.[1],
-        },
-        category: temp,
-        ...(brandId !== null && { brand: brandId }),
-        ...(subCategoryId !== null && { subcategory: subCategoryId }),
-      };
-
-      const dat = await postService("/product/filter", data);
-      setProducts(dat?.data?.data);
-    } else {
-      const temp = [...seelctedCategories];
-      const index = temp.findIndex((item) => item === cat);
-
-      if (index === -1) {
-        temp.push(cat);
-      } else {
-        temp.splice(index, 1);
-      }
-
-      setSelectedCategories(temp);
-
-      const data = {
-        category: temp,
-        ...(brandId !== null && { brand: brandId }),
-        ...(subCategoryId !== null && { subcategory: subCategoryId }),
-      };
-
-      const dat = await postService("/product/filter", data);
-      setProducts(dat?.data?.data);
-    }
-  };
-
-  const filterBrandProducts = async (cat) => {
-    setFlags((prev) => ({
-      ...prev,
-      brand: true,
-    }));
-
-    if (flags?.size) {
-      const temp = [...seelctedBrand];
-      const index = temp.findIndex((item) => item === cat);
-
-      if (index === -1) {
-        temp.push(cat);
-      } else {
-        temp.splice(index, 1);
-      }
-
-      setSelectedBrand(temp);
-
-      const data = {
-        length: {
-          min: length?.[0],
-          max: length?.[1],
-        },
-        breadth: {
-          min: breadth?.[0],
-          max: breadth?.[1],
-        },
-        height: {
-          min: height?.[0],
-          max: height?.[1],
-        },
-        brand: temp,
-        ...(brandId !== null && { brand: brandId }),
-        ...(subCategoryId !== null && { subcategory: subCategoryId }),
-      };
-
-      const dat = await postService("/product/filter", data);
-      setProducts(dat?.data?.data);
-    } else {
-      const temp = [...seelctedBrand];
-      const index = temp.findIndex((item) => item === cat);
-
-      if (index === -1) {
-        temp.push(cat);
-      } else {
-        temp.splice(index, 1);
-      }
-
-      setSelectedBrand(temp);
-
-      const data = {
-        brand: temp,
-        ...(brandId !== null && { brand: brandId }),
-        ...(subCategoryId !== null && { subcategory: subCategoryId }),
-      };
-
-      const dat = await postService("/product/filter", data);
-      const filteredProducts = dat?.data?.data?.filter(
-        (prod) => prod.category === "6557deab301ec4f2f4266131"
-      );
-      setProducts(filteredProducts);
-    }
-  };
-
-  const handleQuery = async () => {
-    const data = {
-      q: q,
-    };
-    const dat = await postService("product/filter", data);
-
-    const filteredProducts = dat?.data?.data?.filter((prod) => {
-      return prod.category === "6557deab301ec4f2f4266131";
-    });
-
-    setProducts(filteredProducts);
-  };
-
-  useEffect(() => {
-    if (q) {
-      handleQuery();
-    }
-  }, [q]);
-
-  const handlecat = async (id) => {
-    setIsLoading(true);
-    try {
-      await filterBrandProducts(id);
-    } catch (error) {
-      console.error("Error occurred:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (products?.length > 0) {
-      setTotalPages(Math.ceil(products.length / showing));
-      const last = currentPage * showing;
-      const first = last - showing;
-      console.log("Corrugated product sample:", products[0]);
-      setFirstIndex(first);
-      setLastIndex(last);
-    } else {
-      setTotalPages(0);
-      setFirstIndex(0);
-      setLastIndex(showing);
-    }
-  }, [products, showing, currentPage]);
-
-  const handleChangePage = (event, value) => {
-    setCurrentPage(value);
-    const last = value * showing;
-    const first = last - showing;
-    setFirstIndex(first);
-    setLastIndex(last);
-  };
-
-  const handleSort = (type) => {
-    if (!products) return;
-    const temp = [...products];
-
-    if (type === "low to high") {
-      const sortedLowToHigh = temp
-        .slice()
-        .sort((a, b) => a?.priceList?.[0]?.SP - b?.priceList?.[0]?.SP);
-      setProducts(sortedLowToHigh);
-    } else if (type === "high to low") {
-      const sortedHighToLow = temp
-        .slice()
-        .sort((a, b) => b?.priceList?.[0]?.SP - a?.priceList?.[0]?.SP);
-      setProducts(sortedHighToLow);
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setWidt(window.innerWidth);
-      const handleResizeWindow = () => setWidt(window.innerWidth);
-
-      window.addEventListener("resize", handleResizeWindow);
-      return () => {
-        window.removeEventListener("resize", handleResizeWindow);
-      };
-    }
+    return false;
   }, []);
 
+  /* ---------- Use SSR initial products (first page only) ---------- */
+  useEffect(() => {
+    console.debug("[SSR] props received on client:", {
+      productLength: product?.length,
+      initialPage,
+      initialLimit,
+      q,
+      brandId,
+      subCategoryId,
+    });
+
+    if (Array.isArray(product) && product.length > 0) {
+      const corrugatedFromSSR = product.filter((prod) => isCorrugated(prod));
+      // show SSR-supplied corrugated items (initial page)
+      setFetchedProducts(corrugatedFromSSR);
+
+      console.debug(
+        "[SSR] applied corrugatedFromSSR → fetchedProducts:",
+        corrugatedFromSSR.length,
+        "items"
+      );
+
+      // If SSR returned less than requested limit, backend still might have more pages — keep hasMoreBackend true if SSR length === initialLimit
+      setHasMoreBackend(product.length >= initialLimit);
+      setUseFilteredMode(false);
+      setCurrentPage(1);
+      setBackendPage(initialPage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product, isCorrugated]);
+
+  /* ---------- Backend fetch (unfiltered) with AbortController ---------- */
+  const fetchBackendPage = useCallback(
+    async (pageToFetch = 1, limit = showing) => {
+      // cancel previous
+      if (abortRef.current) {
+        console.debug(
+          "[network] aborting previous request before starting new fetch"
+        );
+        abortRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      console.debug("[network] fetchBackendPage START:", {
+        pageToFetch,
+        limit,
+      });
+      setIsLoading(true);
+      try {
+        // IMPORTANT: pass signal to your getService. Update getService to forward `options.signal` to fetch/axios if needed.
+        const res = await getService(
+          `product/get?page=${pageToFetch}&limit=${limit}`,
+          { signal: controller.signal }
+        );
+        const arr = res?.data?.data || [];
+        const corr = arr.filter(isCorrugated);
+
+        console.debug("[network] fetchBackendPage RESPONSE:", {
+          pageToFetch,
+          returned: arr.length,
+          corrugatedReturned: corr.length,
+        });
+
+        if (!arr || arr.length === 0 || corr.length < limit) {
+          console.debug(
+            "[network] reached end of backend pages (no more or fewer items than limit)"
+          );
+          setHasMoreBackend(false);
+        }
+        setFetchedProducts((prev) => {
+          const ids = new Set(prev.map((p) => p._id));
+          const newOnes = corr.filter((p) => !ids.has(p._id));
+          console.debug("[state] adding new fetched products:", newOnes.length);
+          return [...prev, ...newOnes];
+        });
+        setBackendPage(pageToFetch);
+      } catch (err) {
+        if (err?.name !== "AbortError")
+          console.error("[network] fetchBackendPage error:", err);
+        else console.debug("[network] fetchBackendPage aborted");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isCorrugated, showing]
+  );
+
+  /* ---------- IntersectionObserver for infinite scroll ---------- */
+  const loadMoreFromFiltered = useCallback(() => {
+    setFetchedProducts((prev) => {
+      const start = prev.length;
+      const nextChunk = filteredProducts.slice(start, start + showing);
+      console.debug("[infinite] loadMoreFromFiltered:", {
+        start,
+        nextChunkLength: nextChunk.length,
+      });
+      return [...prev, ...nextChunk];
+    });
+  }, [filteredProducts, showing]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            console.debug(
+              "[infinite] sentinel intersecting. useFilteredMode:",
+              useFilteredMode
+            );
+            if (useFilteredMode) {
+              const displayed = fetchedProducts.length;
+              if (displayed < filteredProducts.length) {
+                console.debug(
+                  "[infinite] loading next filtered chunk (displayed < filtered)"
+                );
+                loadMoreFromFiltered();
+              } else {
+                console.debug(
+                  "[infinite] filtered mode — nothing more to load"
+                );
+              }
+            } else {
+              if (hasMoreBackend) {
+                console.debug(
+                  "[infinite] unfiltered mode — fetching next backend page:",
+                  backendPage + 1
+                );
+                fetchBackendPage(backendPage + 1, showing);
+              } else {
+                console.debug(
+                  "[infinite] unfiltered mode — no more backend pages"
+                );
+              }
+            }
+          }
+        });
+      },
+      { root: null, rootMargin: "300px", threshold: 0.1 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [
+    sentinelRef,
+    useFilteredMode,
+    fetchedProducts.length,
+    filteredProducts.length,
+    hasMoreBackend,
+    backendPage,
+    fetchBackendPage,
+    loadMoreFromFiltered,
+    showing,
+  ]);
+
+  /* ---------- Apply filtered results (safe) ---------- */
+  const applyFilteredResults = useCallback(
+    (arr) => {
+      console.debug(
+        "[filter] applyFilteredResults called. raw length:",
+        (arr || []).length
+      );
+      const corr = (arr || []).filter(isCorrugated);
+      console.debug("[filter] corrugated after filter:", corr.length);
+      setFilteredProducts(corr);
+      setFetchedProducts(corr.slice(0, showing));
+      setUseFilteredMode(true);
+      setCurrentPage(1);
+      // when filtered results present, we stop backend infinite paging
+      setHasMoreBackend(false);
+    },
+    [isCorrugated, showing]
+  );
+
+  /* ---------- Debounced safe POST filter helper ---------- */
+  const doFilter = useCallback(
+    (payload) => {
+      console.debug("[filter] schedule doFilter with payload:", payload);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(async () => {
+        if (abortRef.current) {
+          console.debug("[network] aborting previous request before filter");
+          abortRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        setIsLoading(true);
+        try {
+          console.debug(
+            "[network] doFilter request START (POST /product/filter)",
+            payload
+          );
+          const dat = await postService("/product/filter", payload, {
+            signal: controller.signal,
+          });
+          console.debug(
+            "[network] doFilter RESPONSE length:",
+            dat?.data?.data?.length || 0
+          );
+          applyFilteredResults(dat?.data?.data || []);
+        } catch (err) {
+          if (err?.name !== "AbortError")
+            console.error("[network] doFilter error:", err);
+          else console.debug("[network] doFilter aborted");
+        } finally {
+          setIsLoading(false);
+        }
+      }, 250); // 250ms debounce
+    },
+    [applyFilteredResults]
+  );
+
+  /* ---------- Filter / search behaviors (compute toggles locally to avoid stale reads) ---------- */
+  const handleApply = useCallback(async () => {
+    setFlags((prev) => ({ ...prev, size: true }));
+    const body = {
+      length: { min: length?.[0], max: length?.[1] },
+      breadth: { min: breadth?.[0], max: breadth?.[1] },
+      height: { min: height?.[0], max: height?.[1] },
+      unit,
+      ...(selectedCategories.length ? { category: selectedCategories } : {}),
+      ...(selectedBrand.length ? { brand: selectedBrand } : {}),
+      ...(brandId !== null ? { brandId } : {}),
+      ...(subCategoryId !== null ? { subCategoryId } : {}),
+    };
+    console.debug("[filter] handleApply payload:", body);
+    doFilter(body);
+  }, [
+    length,
+    breadth,
+    height,
+    unit,
+    selectedCategories,
+    selectedBrand,
+    doFilter,
+    brandId,
+    subCategoryId,
+  ]);
+
+  const filterProducts = useCallback(
+    (cat) => {
+      setFlags((prev) => ({ ...prev, category: true }));
+      // compute local toggled categories
+      setSelectedCategories((prev) => {
+        const temp = [...prev];
+        const idx = temp.indexOf(cat);
+        if (idx === -1) temp.push(cat);
+        else temp.splice(idx, 1);
+
+        // call filter with computed selection
+        const data = {
+          length: { min: length?.[0], max: length?.[1] },
+          breadth: { min: breadth?.[0], max: breadth?.[1] },
+          height: { min: height?.[0], max: height?.[1] },
+          category: temp,
+          ...(brandId !== null && { brandId }),
+          ...(subCategoryId !== null && { subCategoryId }),
+        };
+        console.debug(
+          "[filter] filterProducts toggled category:",
+          cat,
+          "-> payload:",
+          data
+        );
+        doFilter(data);
+        return temp;
+      });
+    },
+    [length, breadth, height, brandId, subCategoryId, doFilter]
+  );
+
+  const filterBrandProducts = useCallback(
+    (brandCat) => {
+      setFlags((prev) => ({ ...prev, brand: true }));
+      setSelectedBrand((prev) => {
+        const temp = [...prev];
+        const idx = temp.indexOf(brandCat);
+        if (idx === -1) temp.push(brandCat);
+        else temp.splice(idx, 1);
+
+        const body = {
+          length: { min: length?.[0], max: length?.[1] },
+          breadth: { min: breadth?.[0], max: breadth?.[1] },
+          height: { min: height?.[0], max: height?.[1] },
+          brand: temp,
+          ...(brandId !== null && { brandId }),
+          ...(subCategoryId !== null && { subCategoryId }),
+        };
+        console.debug(
+          "[filter] filterBrandProducts toggled brand:",
+          brandCat,
+          "-> payload:",
+          body
+        );
+        doFilter(body);
+        return temp;
+      });
+    },
+    [length, breadth, height, brandId, subCategoryId, doFilter]
+  );
+
+  const handleQuery = useCallback(async () => {
+    try {
+      const data = { q };
+      console.debug("[search] handleQuery sending payload:", data);
+      const dat = await postService("product/filter", data);
+      console.debug(
+        "[search] handleQuery response length:",
+        dat?.data?.data?.length || 0
+      );
+      applyFilteredResults(dat?.data?.data || []);
+    } catch (err) {
+      console.error("handleQuery error:", err);
+    }
+  }, [q, applyFilteredResults]);
+
+  useEffect(() => {
+    if (q) handleQuery();
+  }, [q, handleQuery]);
+
+  const handlecat = useCallback(
+    async (id) => {
+      setIsLoading(true);
+      try {
+        console.debug("[ui] handlecat called with id:", id);
+        // uses filterBrandProducts which calls doFilter internally
+        filterBrandProducts(id);
+      } catch (error) {
+        console.error("Error occurred:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [filterBrandProducts]
+  );
+
+  /* ---------- Sorting (fixed stale closure issue) ---------- */
+  const handleSort = useCallback(
+    (type) => {
+      console.debug("[sort] handleSort:", type);
+      const comparator = (a, b) =>
+        (a?.priceList?.[0]?.SP || 0) - (b?.priceList?.[0]?.SP || 0);
+      const direction = type === "high to low" ? -1 : 1;
+
+      if (useFilteredMode) {
+        setFilteredProducts((prev) => {
+          const sorted = [...prev].sort((a, b) => direction * comparator(a, b));
+          // reflect sorted first chunk in fetchedProducts
+          setFetchedProducts(
+            sorted.slice(
+              0,
+              Math.max(fetchedProducts.length || showing, showing)
+            )
+          );
+          return sorted;
+        });
+      } else {
+        setFetchedProducts((prev) =>
+          [...prev].sort((a, b) => direction * comparator(a, b))
+        );
+      }
+      setFlags((p) => ({ ...p, sort: true }));
+    },
+    [useFilteredMode, showing, fetchedProducts.length]
+  );
+
+  const displayedProducts = useMemo(
+    () => (fetchedProducts ? fetchedProducts : []),
+    [fetchedProducts]
+  );
+
+  /* ---------- Pagination control ---------- */
+  const handleChangePage = useCallback(
+    (_, value) => {
+      console.debug("[paging] handleChangePage ->", value);
+      setCurrentPage(value);
+      const start = (value - 1) * showing;
+      const end = start + showing;
+      if (useFilteredMode) {
+        console.debug(
+          "[paging] filtered mode - slicing filteredProducts 0..",
+          end
+        );
+        setFetchedProducts(filteredProducts.slice(0, end));
+      } else {
+        if (fetchedProducts.length < end && hasMoreBackend) {
+          console.debug(
+            "[paging] fetching backend page because not enough items in buffer"
+          );
+          fetchBackendPage(backendPage + 1, showing);
+        }
+        setFetchedProducts((prev) => prev.slice(0, end));
+      }
+      window.scrollTo({ top: 250, behavior: "smooth" });
+    },
+    [
+      showing,
+      useFilteredMode,
+      filteredProducts,
+      fetchedProducts.length,
+      backendPage,
+      fetchBackendPage,
+      hasMoreBackend,
+    ]
+  );
+
+  /* ---------- Window resize listener (cleaned name) ---------- */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResizeWindow = () => {
+      setWidth(window.innerWidth);
+      console.debug("[ui] window resized to", window.innerWidth);
+    };
+    window.addEventListener("resize", handleResizeWindow);
+    return () => window.removeEventListener("resize", handleResizeWindow);
+  }, []);
+
+  /* ---------- If initial buffer empty, fetch page1 ---------- */
+  useEffect(() => {
+    if (!fetchedProducts || fetchedProducts.length === 0) {
+      console.debug("[init] buffer empty - fetching backend page 1");
+      fetchBackendPage(1, showing);
+      setUseFilteredMode(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ---------- Render (design kept exactly) ---------- */
   return (
     <>
       <Head>
@@ -379,7 +636,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
           content="You Can Buy corrugated boxes online at Prem Industries India Limited. We are one of the best corrugated boxes manufacturers & supplier in India."
         />
       </Head>
-      <div style={{ paddingTop: `${widt > breakpoint ? "120px" : "150px"}` }}>
+
+      <div style={{ paddingTop: `${width > breakpoint ? "120px" : "150px"}` }}>
         {isLoading && <Loader />}
         <div className="row p-0 m-0">
           <CorrugatedBanner />
@@ -395,44 +653,49 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
               <div
                 className="row mt-2 m-0"
                 style={{ height: "1px", backgroundColor: "#D9D9D9" }}
-              ></div>
+              />
             </div>
+
             <div className={"row " + styles.filterheader}>
               <div className={"col-6 p-0 m-0 " + styles.filterheadersuba}>
                 <p className={styles.showresulttext}>
-                  Showing all {products?.length || 0} results
+                  Showing all {displayedProducts?.length || 0} results
                 </p>
               </div>
               <div className={"col-6 p-0  " + styles.filterheadersubb}>
                 <div className={styles.filterheadersubbdiv}>
                   <p className={styles.filtershowtext}>Show:</p>
                   <select
-                    style={{
-                      paddingLeft: "12px",
-                      marginRight: "10px",
-                      width: "66px",
-                      height: "34px",
-                      backgroundColor: "white",
-                      border: "1px solid #D9D9D9",
-                    }}
+                    style={selectSmallStyle}
                     value={showing}
-                    onChange={(e) => setShowing(parseInt(e.target.value, 10))}
+                    onChange={(e) => {
+                      setShowing(parseInt(e.target.value, 10));
+                      if (useFilteredMode) {
+                        setFetchedProducts(
+                          filteredProducts.slice(
+                            0,
+                            parseInt(e.target.value, 10)
+                          )
+                        );
+                      } else {
+                        setFetchedProducts((prev) =>
+                          prev.slice(0, parseInt(e.target.value, 10))
+                        );
+                      }
+                      setCurrentPage(1);
+                    }}
                   >
                     <option value={12}>12</option>
                     <option value={18}>18</option>
                     <option value={24}>24</option>
                   </select>
+
                   <select
-                    style={{
-                      paddingLeft: "12px",
-                      width: "193px",
-                      height: "34px",
-                      backgroundColor: "white",
-                      border: "1px solid #D9D9D9",
-                    }}
+                    style={selectSortStyle}
                     onChange={(e) => handleSort(e.target.value)}
+                    defaultValue=""
                   >
-                    <option selected disabled>
+                    <option value="" disabled>
                       Default sorting
                     </option>
                     <option value="high to low">High to Low</option>
@@ -492,7 +755,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                                 name="unit"
                                 value="inches"
                                 checked={unit === "inches"}
-                                onChange={handleUnit}
+                                onChange={(e) => setUnit(e.target.value)}
                                 style={{ marginTop: "5px" }}
                               />
                               inch
@@ -509,7 +772,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                                 name="unit"
                                 value="mm"
                                 checked={unit === "mm"}
-                                onChange={handleUnit}
+                                onChange={(e) => setUnit(e.target.value)}
                                 style={{ marginTop: "5px" }}
                               />
                               mm
@@ -546,9 +809,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                         </div>
                         <Slider
                           sx={CustomSliderStyles}
-                          getAriaLabel={() => "Temperature range"}
                           value={length}
-                          onChange={handleLength}
+                          onChange={(_, v) => setLength(v)}
                           valueLabelDisplay="auto"
                           getAriaValueText={valuetext}
                           min={minValue}
@@ -584,9 +846,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                         </div>
                         <Slider
                           sx={CustomSliderStyles}
-                          getAriaLabel={() => "Temperature range"}
                           value={breadth}
-                          onChange={handleBradth}
+                          onChange={(_, v) => setBreadth(v)}
                           valueLabelDisplay="auto"
                           getAriaValueText={valuetext}
                           min={minValue}
@@ -622,9 +883,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                         </div>
                         <Slider
                           sx={CustomSliderStyles}
-                          getAriaLabel={() => "Temperature range"}
                           value={height}
-                          onChange={handleHeight}
+                          onChange={(_, v) => setHeight(v)}
                           valueLabelDisplay="auto"
                           getAriaValueText={valuetext}
                           min={minValue}
@@ -667,16 +927,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                               onChange={() =>
                                 handlecat("6557dbad301ec4f2f4266103")
                               }
-                              sx={{
-                                padding: "0px",
-                                color: "gray",
-                                "&.Mui-checked": {
-                                  color: "gray",
-                                },
-                                "&.Mui-unchecked": {
-                                  color: "gray",
-                                },
-                              }}
+                              sx={brandCheckboxSx}
                               inputProps={{ "aria-label": "controlled" }}
                             />
                             <p
@@ -697,16 +948,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                               onChange={() =>
                                 handlecat("6557dbbc301ec4f2f4266107")
                               }
-                              sx={{
-                                padding: "0px",
-                                color: "gray",
-                                "&.Mui-checked": {
-                                  color: "gray",
-                                },
-                                "&.Mui-unchecked": {
-                                  color: "gray",
-                                },
-                              }}
+                              sx={brandCheckboxSx}
                               inputProps={{ "aria-label": "controlled" }}
                             />
                             <p
@@ -728,12 +970,12 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
 
               {/* Products for Desktop view */}
               <div className={"col-9 p-2 " + styles.productslistdivwindow}>
-                {products && products.length > 0 ? (
-                  products.slice(firstIndex, lastIndex).map((item, index) => (
+                {displayedProducts && displayedProducts.length > 0 ? (
+                  displayedProducts.map((item, index) => (
                     <div
                       className="row w-40"
                       style={{ height: "400px" }}
-                      key={index}
+                      key={item._id || index}
                     >
                       <DesktopListingCard item={item} />
                     </div>
@@ -747,6 +989,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                     </p>
                   </div>
                 )}
+                {/* sentinel for infinite scroll */}
+                <div ref={sentinelRef} style={{ height: 1 }} />
               </div>
 
               {/* Filters for mobile View */}
@@ -800,7 +1044,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                                 name="unit"
                                 value="inches"
                                 checked={unit === "inches"}
-                                onChange={handleUnit}
+                                onChange={(e) => setUnit(e.target.value)}
                                 style={{ marginTop: "5px" }}
                               />
                               inch
@@ -817,7 +1061,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                                 name="unit"
                                 value="mm"
                                 checked={unit === "mm"}
-                                onChange={handleUnit}
+                                onChange={(e) => setUnit(e.target.value)}
                                 style={{ marginTop: "5px" }}
                               />
                               mm
@@ -854,9 +1098,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                         </div>
                         <Slider
                           sx={CustomSliderStyles}
-                          getAriaLabel={() => "Temperature range"}
                           value={length}
-                          onChange={handleLength}
+                          onChange={(_, v) => setLength(v)}
                           valueLabelDisplay="auto"
                           getAriaValueText={valuetext}
                           min={minValue}
@@ -892,9 +1135,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                         </div>
                         <Slider
                           sx={CustomSliderStyles}
-                          getAriaLabel={() => "Temperature range"}
                           value={breadth}
-                          onChange={handleBradth}
+                          onChange={(_, v) => setBreadth(v)}
                           valueLabelDisplay="auto"
                           getAriaValueText={valuetext}
                           min={minValue}
@@ -930,9 +1172,8 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                         </div>
                         <Slider
                           sx={CustomSliderStyles}
-                          getAriaLabel={() => "Temperature range"}
                           value={height}
-                          onChange={handleHeight}
+                          onChange={(_, v) => setHeight(v)}
                           valueLabelDisplay="auto"
                           getAriaValueText={valuetext}
                           min={minValue}
@@ -975,16 +1216,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                               onChange={() =>
                                 handlecat("6557dbad301ec4f2f4266103")
                               }
-                              sx={{
-                                padding: "0px",
-                                color: "gray",
-                                "&.Mui-checked": {
-                                  color: "gray",
-                                },
-                                "&.Mui-unchecked": {
-                                  color: "gray",
-                                },
-                              }}
+                              sx={brandCheckboxSx}
                               inputProps={{ "aria-label": "controlled" }}
                             />
                             <p
@@ -1005,16 +1237,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                               onChange={() =>
                                 handlecat("6557dbbc301ec4f2f4266107")
                               }
-                              sx={{
-                                padding: "0px",
-                                color: "gray",
-                                "&.Mui-checked": {
-                                  color: "gray",
-                                },
-                                "&.Mui-unchecked": {
-                                  color: "gray",
-                                },
-                              }}
+                              sx={brandCheckboxSx}
                               inputProps={{ "aria-label": "controlled" }}
                             />
                             <p
@@ -1035,16 +1258,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                               onChange={() =>
                                 handlecat("6557dbcc301ec4f2f426610b")
                               }
-                              sx={{
-                                padding: "0px",
-                                color: "gray",
-                                "&.Mui-checked": {
-                                  color: "gray",
-                                },
-                                "&.Mui-unchecked": {
-                                  color: "gray",
-                                },
-                              }}
+                              sx={brandCheckboxSx}
                               inputProps={{ "aria-label": "controlled" }}
                             />
                             <p
@@ -1065,16 +1279,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
                               onChange={() =>
                                 handlecat("6582c8580ab82549a084894f")
                               }
-                              sx={{
-                                padding: "0px",
-                                color: "gray",
-                                "&.Mui-checked": {
-                                  color: "gray",
-                                },
-                                "&.Mui-unchecked": {
-                                  color: "gray",
-                                },
-                              }}
+                              sx={brandCheckboxSx}
                               inputProps={{ "aria-label": "controlled" }}
                             />
                             <p
@@ -1098,12 +1303,12 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
               <div
                 className={"col-8 p-0 w-100 " + styles.productslistdivmobile}
               >
-                {products && products.length > 0 ? (
-                  products.slice(firstIndex, lastIndex).map((item, index) => (
+                {displayedProducts && displayedProducts.length > 0 ? (
+                  displayedProducts.map((item, index) => (
                     <div
                       className="mt-4 d-flex flex-column justify-content-start align-items-center"
                       style={{ width: "170px", height: "205px" }}
-                      key={index}
+                      key={item._id || index}
                     >
                       <ListingCard item={item} />
                     </div>
@@ -1129,7 +1334,7 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
               <div
                 className="row mt-2 m-0"
                 style={{ height: "1px", backgroundColor: "#D9D9D9" }}
-              ></div>
+              />
             </div>
 
             <div className="row mt-4 p-0 m-0">
@@ -1139,7 +1344,13 @@ const BoppTape = ({ brand, product, category, brandId, subCategoryId, q }) => {
               >
                 <Stack spacing={2} className={styles.pagingdivlast}>
                   <Pagination
-                    count={totalPages}
+                    count={
+                      Math.ceil(
+                        (useFilteredMode
+                          ? filteredProducts.length
+                          : fetchedProducts.length) / showing
+                      ) || 1
+                    }
                     variant="outlined"
                     shape="rounded"
                     onChange={handleChangePage}

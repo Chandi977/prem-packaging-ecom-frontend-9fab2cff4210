@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
-import { getService, DEV } from "../../services/service";
+import { getService, PRODUCTION } from "../../services/service";
 import Head from "next/head";
 import Info from "./Info";
 import BuySection from "./BuySection";
@@ -185,7 +185,7 @@ const Productpage = ({ product }) => {
     };
 
     try {
-      const response = await fetch(DEV + "notify/create", {
+      const response = await fetch(PRODUCTION + "notify/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
