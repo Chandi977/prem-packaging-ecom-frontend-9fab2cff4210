@@ -34,27 +34,27 @@ const requestWithRetry = async (method, url, payload, axiosConfig = {}) => {
   } catch (error) {
     console.warn("PRODUCTION failed, retrying with DEV…", error?.message);
 
-    // try {
-    //   const devOptions = {
-    //     method,
-    //     url: DEV + url,
-    //     ...axiosConfig,
-    //   };
+    try {
+      const devOptions = {
+        method,
+        url: DEV + url,
+        ...axiosConfig,
+      };
 
-    //   if (method.toLowerCase() === "get") {
-    //     if (payload && typeof payload === "object") {
-    //       devOptions.params = payload;
-    //     }
-    //   } else {
-    //     if (payload !== undefined) devOptions.data = payload;
-    //   }
+      if (method.toLowerCase() === "get") {
+        if (payload && typeof payload === "object") {
+          devOptions.params = payload;
+        }
+      } else {
+        if (payload !== undefined) devOptions.data = payload;
+      }
 
-    //   const retryRes = await axios(devOptions);
-    //   return retryRes;
-    // } catch (err) {
-    //   toast.error(err?.response?.data?.message || "Something went wrong");
-    //   return null;
-    // }
+      const retryRes = await axios(devOptions);
+      return retryRes;
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Something went wrong");
+      return null;
+    }
   }
 };
 
