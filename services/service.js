@@ -3,10 +3,10 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 // BASE URLS (kept exactly as you provided)
-export const DEV = "http://localhost:5000/premind/api/";
-const y = "hello";
-export const PRODUCTION =
+export const DEV =
   "https://prem-packaging-ecom-backend-2.onrender.com/premind/api/";
+export const PRODUCTION = "http://localhost:5000/premind/api/";
+
 // Core request handler with auto-retry
 // NOTE: kept the same retry order (PRODUCTION first, DEV second)
 const requestWithRetry = async (method, url, payload, axiosConfig = {}) => {
