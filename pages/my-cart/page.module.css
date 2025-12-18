@@ -1,0 +1,150 @@
+.catalogpath {
+  color: var(--h-eading, #222);
+  font-family: Montserrat;
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 21px; /* 175% */
+  text-decoration-line: underline;
+  padding: 0px;
+  margin: 0px;
+}
+/* main layouts */
+
+/* mainbody */
+.mainbody {
+  margin-left: 0px;
+  margin-bottom: 0px;
+  margin-right: 0px;
+  padding-left: 120px;
+  padding-right: 120px;
+  background-color: white;
+}
+@media (max-width: 900px) {
+  .mainbody {
+    padding-left: 4px;
+    padding-right: 4px;
+    background-color: #f8f8f8;
+  }
+}
+
+.mainlayout1 {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .mainlayout1 {
+    display: none;
+  }
+}
+.divinvisible {
+}
+
+@media (max-width: 900px) {
+  .divinvisible {
+    display: none;
+  }
+}
+
+.lastlayout {
+  display: flex;
+  margin: 0px;
+}
+
+@media (max-width: 900px) {
+  .lastlayout {
+    flex-direction: column;
+    justify-content: start;
+    margin-left: 0px;
+    margin-right: 0px;
+    border: 0.817px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8.17px;
+    padding: 20px !important;
+  }
+}
+
+.lastlayoutcouponbtn {
+  width: 205px !important;
+  height: 56px !important;
+  background-color: #182c5a !important;
+  color: white !important;
+  border-radius: 4px !important;
+  border: 0px !important;
+  margin-left: 20px;
+}
+
+@media (max-width: 900px) {
+  .lastlayoutcouponbtn {
+    margin-left: 0px;
+    margin-top: 20px;
+  }
+}
+
+.lastlayoutcarttotal {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  margin: 0px;
+  border-radius: 4px;
+  border: 1.5px solid #000;
+}
+
+@media (max-width: 900px) {
+  .lastlayoutcarttotal {
+    justify-content: start;
+    margin-top: 20px;
+    width: 100%;
+  }
+}
+
+.lastlayoutfirsthalf {
+}
+
+@media (max-width: 900px) {
+  .lastlayoutfirsthalf {
+    width: 100%;
+  }
+}
+
+.lastlayoutcouponinput {
+  width: 300px;
+  height: 56px;
+  border: 1px solid #000;
+  border-radius: 4px;
+}
+
+@media (max-width: 900px) {
+  .lastlayoutcouponinput {
+    width: 100%;
+  }
+}
+
+.lastlayoutsecondhalfinner {
+  width: 470px;
+}
+
+@media (max-width: 900px) {
+  .lastlayoutsecondhalfinner {
+    width: 100%;
+  }
+}
+
+.webresponsiveonly {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .webresponsiveonly {
+    display: block;
+  }
+}
+
+.returnToShop {
+  background-color: #182c5a;
+  color: white;
+}
+
+.returnToShop:hover {
+  background-color: #e92227;
+}

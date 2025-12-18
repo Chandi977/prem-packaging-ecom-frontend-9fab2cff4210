@@ -1,0 +1,266 @@
+webpackHotUpdate("main",{
+
+/***/ "./src/AppTopbar.js":
+/*!**************************!*\
+  !*** ./src/AppTopbar.js ***!
+  \**************************/
+/*! exports provided: AppTopbar */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AppTopbar", function() { return AppTopbar; });
+/* harmony import */ var C_Users_NRC_Desktop_ecom_admin_dashboard_node_modules_babel_preset_react_app_node_modules_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./node_modules/babel-preset-react-app/node_modules/@babel/runtime/helpers/esm/slicedToArray */ "./node_modules/babel-preset-react-app/node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var react_router_dom__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-router-dom */ "./node_modules/react-router-dom/esm/react-router-dom.js");
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! classnames */ "./node_modules/classnames/index.js");
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var react_helmet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react-helmet */ "./node_modules/react-helmet/es/Helmet.js");
+/* harmony import */ var pusher_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
+/* harmony import */ var pusher_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(pusher_js__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _services_GetTemplate__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./services/GetTemplate */ "./src/services/GetTemplate.js");
+/* harmony import */ var react_icons_bs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! react-icons/bs */ "./node_modules/react-icons/bs/index.esm.js");
+/* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
+/* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(moment__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+/* harmony import */ var _services_PostTemplate__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./services/PostTemplate */ "./src/services/PostTemplate.js");
+
+var _this = undefined,
+  _jsxFileName = "C:\\Users\\NRC\\Desktop\\ecom-admin-dashboard\\src\\AppTopbar.js";
+
+
+
+
+
+
+
+
+
+
+
+var AppTopbar = function AppTopbar(props) {
+  var _useState = Object(react__WEBPACK_IMPORTED_MODULE_1__["useState"])([]),
+    _useState2 = Object(C_Users_NRC_Desktop_ecom_admin_dashboard_node_modules_babel_preset_react_app_node_modules_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_useState, 2),
+    notifications = _useState2[0],
+    setNotifications = _useState2[1];
+  //console.log(notifications);
+  var name = localStorage.getItem("user");
+  var role = localStorage.getItem("role");
+  var history = Object(react_router_dom__WEBPACK_IMPORTED_MODULE_2__["useHistory"])();
+  var dispatch = Object(react_redux__WEBPACK_IMPORTED_MODULE_9__["useDispatch"])();
+  var handleSignout = function handleSignout() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    history.push("/auth");
+  };
+
+  // const handleNotificationforUser = (not) => {
+  //     const id = localStorage.getItem("id");
+  //     const temp = not?.filter((item) => {
+  //         return item.seen.some((ite) => {
+  //             return ite.user === id && ite.seen === false;
+  //         });
+  //     });
+  //     setNotifications(temp);
+  // };
+
+  // const getNotifications = async () => {
+  //     const res = await handleGetRequest("/getNotifications");
+  //     setNotifications(res?.data);
+  //     //console.log(res?.data);
+  //     handleNotificationforUser(res?.data);
+  // };
+
+  // useEffect(() => {
+  //     // Set up Pusher
+  //     const pusher = new Pusher("79d34ccb7ea30ec8fdc4", {
+  //         cluster: "ap2",
+  //         encrypted: true,
+  //     });
+
+  //     getNotifications();
+
+  //     // Subscribe to the 'new-order' channel
+  //     const channel = pusher.subscribe("orders");
+  //     channel.bind("new-order", (data) => {
+  //         setNotifications((prevNotifications) => [...prevNotifications, data]);
+  //     });
+
+  //     return () => {
+  //         // Unsubscribe from the channel when component unmounts
+  //         channel.unbind("new-order");
+  //         pusher.unsubscribe("orders");
+  //     };
+  // }, []);
+
+  // const handleNotification = async (ite) => {
+  //     const temp = notifications?.filter((item) => item._id === ite?._id);
+  //     const temp2 = temp?.[0]?.seen;
+  //     //console.log(temp2);
+  //     const temp3 = temp2?.map((item) => {
+  //         if (item.user === localStorage.getItem("id")) {
+  //             item.seen = true;
+  //         }
+  //         return item;
+  //     });
+  //     const data = {
+  //         id: ite?._id,
+  //         seen: temp3,
+  //     };
+  //     const res = await dispatch(handlePostRequest(data, "/editNotification", true, true));
+  //     if (res !== "error") {
+  //         getNotifications();
+  //         history.push(ite?.link);
+  //     }
+  // };
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_helmet__WEBPACK_IMPORTED_MODULE_4__["Helmet"], {
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 89,
+      columnNumber: 13
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("link", {
+    id: "theme-link",
+    rel: "stylesheet",
+    href: "/assets/themes/lara-light-indigo/theme.css",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 90,
+      columnNumber: 17
+    }
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: "layout-topbar",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 92,
+      columnNumber: 13
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_2__["Link"], {
+    to: "/",
+    className: "layout-topbar-logo",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 93,
+      columnNumber: 17
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("img", {
+    src: "/images/prem.png",
+    width: 120,
+    height: 400,
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 95,
+      columnNumber: 21
+    }
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("button", {
+    type: "button",
+    className: "p-link layout-topbar-menu-button layout-topbar-button",
+    onClick: props.onMobileTopbarMenuClick,
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 98,
+      columnNumber: 17
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("i", {
+    className: "pi pi-ellipsis-v",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 99,
+      columnNumber: 21
+    }
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: "search_div",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 101,
+      columnNumber: 17
+    }
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("ul", {
+    className: classnames__WEBPACK_IMPORTED_MODULE_3___default()("layout-topbar-menu lg:flex origin-top", {
+      "layout-topbar-menu-mobile-active": props.mobileTopbarMenuActive
+    }),
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 103,
+      columnNumber: 17
+    }
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: "user_info",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 124,
+      columnNumber: 17
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("img", {
+    src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3nNAks_aW4HGy_S8euxRBBnbtqJRQDNvBKA&usqp=CAU",
+    alt: "profile_img",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 125,
+      columnNumber: 21
+    }
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    className: "p_div",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 126,
+      columnNumber: 21
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("p", {
+    className: "p1",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 127,
+      columnNumber: 25
+    }
+  }, name), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("p", {
+    className: "p2",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 128,
+      columnNumber: 25
+    }
+  }, role))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
+    style: {
+      marginLeft: "30px",
+      cursor: "pointer"
+    },
+    onClick: handleSignout,
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 131,
+      columnNumber: 17
+    }
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("i", {
+    className: "pi pi-sign-out",
+    __self: _this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 132,
+      columnNumber: 21
+    }
+  }))));
+};
+
+/***/ })
+
+})
+//# sourceMappingURL=main.4395813b336655b30b4e.hot-update.js.map

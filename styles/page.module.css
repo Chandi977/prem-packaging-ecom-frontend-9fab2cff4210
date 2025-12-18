@@ -1,0 +1,355 @@
+/* layouts */
+
+.displayimage {
+  height: "800px" !important;
+}
+.yesLOOO {
+  position: relative;
+  border: 1px solid red;
+}
+
+.arrowPrev {
+  position: absolute;
+  margin-top: 170px !important;
+  z-index: 2;
+  margin-left: -60px;
+  font-size: 10px;
+  background-color: #f5f5f5;
+  padding: 17px 22px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.arrowPrev1 {
+  position: absolute;
+  margin-top: 120px !important;
+  z-index: 2;
+  margin-left: -10px;
+  font-size: 10px;
+  background-color: #f5f5f5;
+  padding: 17px 22px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.imageee {
+  width: 20px;
+  height: 30px;
+}
+.arrowNext1 {
+  position: absolute;
+  margin-top: 120px;
+  z-index: 2;
+  right: 30px;
+  background-color: #f5f5f5;
+  padding: 17px 22px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.arrowNext {
+  position: absolute;
+  margin-top: 170px;
+  z-index: 2;
+  right: 30px;
+  background-color: #f5f5f5;
+  padding: 17px 22px;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* //// */
+.content {
+  position: absolute;
+  top: 20%;
+  left: 15%;
+}
+@media (max-width: 900px) {
+  .content {
+    top: 6%;
+    left: 5%;
+  }
+}
+
+@media (max-width: 768px) {
+  .maineee {
+    margin-left: 30px;
+  }
+}
+
+.brands_div {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 60px;
+  padding-top: 45px;
+  padding-left: 20px;
+  padding-right: 20px;
+  row-gap: 36px;
+  justify-content: center;
+}
+
+.brandName {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  justify-content: center;
+  align-items: center;
+  gap: 70px;
+}
+
+@media (max-width: 768px) {
+  .brandName {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    justify-content: center;
+    align-items: center;
+    gap: 70px;
+  }
+}
+
+.sliderheader {
+  color: #fff;
+  font-family: Montserrat;
+  font-size: 63px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 71px; /* 112.698% */
+}
+/* media queries */
+
+@media (max-width: 900px) {
+  .sliderheader {
+    font-size: 52px;
+  }
+}
+
+.slidertext {
+  color: #fff;
+  font-family: Montserrat;
+  font-size: 18.169px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 25.669px; /* 141.28% */
+}
+.sliderbtn {
+  border: 0;
+  border-radius: 6px;
+  display: flex;
+  width: 337px;
+  height: 48px;
+  padding: 14px 36px;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+  color: #fff;
+  text-align: center;
+  font-family: Montserrat;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  text-transform: uppercase;
+  background-color: #182c5a;
+}
+
+/* mainbody */
+.mainbody {
+  margin-top: 35px !important;
+  margin-left: 0px !important;
+  margin-bottom: 0px !important;
+  margin-right: 0px !important;
+  padding-left: 110px !important;
+  padding-right: 110px !important;
+}
+@media (max-width: 900px) {
+  .mainbody {
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+  }
+}
+
+/* Eccommercebrands-section */
+
+.headerbrands {
+  color: #3a5ba2;
+
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 40px; /* 125% */
+  font-family: "Montserrat", sans-serif;
+}
+
+.headerbrandsfirst {
+  color: #182c5a;
+
+  font-size: 40px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 40px; /* 125% */
+  font-family: "Montserrat", sans-serif;
+}
+
+@media (max-width: 900px) {
+  .headerbrandsfirst {
+    max-width: 15ch;
+  }
+}
+
+.headerbrandssecond {
+  color: #182c5a;
+  font-size: 40px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 10px; /* 125% */
+  font-family: "Montserrat", sans-serif;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .headerbrandssecond {
+    max-width: 18ch;
+  }
+}
+.packagebtn {
+  border: 0;
+  color: #fff;
+  text-align: center;
+  font-family: Montserrat;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 20px; /* 142.857% */
+  text-transform: uppercase;
+  display: flex;
+  width: 230px;
+  height: 48px;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+  background-color: #182c5a;
+  transition: background-color 0.2s ease-out;
+}
+
+.packagebtn:hover {
+  background-color: #e92227;
+}
+
+.ecommerimages {
+  display: none;
+}
+@media (max-width: 900px) {
+  .ecommerimages {
+    display: block;
+  }
+}
+.ecommercebutton {
+  margin-top: 48px;
+  display: flex !important;
+  justify-content: center;
+}
+@media (max-width: 900px) {
+  .ecommercebutton {
+    display: none !important;
+  }
+}
+
+/* topproducts */
+
+.toptext {
+  color: var(--text, #666);
+  text-align: center;
+  font-family: "Montserrat", sans-serif;
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 20px; /* 143.781% */
+}
+
+/* featuredproducts */
+
+.offtext {
+  color: var(--white, #fff);
+  padding: 0px;
+  margin: 0px;
+  text-align: center;
+  font-family: Montserrat;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 12px; /* 120% */
+}
+.pricetext {
+  color: #249b3e;
+  font-family: Montserrat;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px; /* 112.5% */
+}
+
+.pricetextwl {
+  color: #249b3e;
+  font-family: Montserrat;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 30px;
+}
+.productheadtext {
+  color: var(--h-eading, #222);
+  font-family: "Montserrat", sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 21px; /* 131.25% */
+}
+/* eccomercepacking css */
+
+.eccomercepackheading {
+  color: #3a5ba2;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 48px; /* 133.333% */
+  letter-spacing: 1.44px;
+}
+@media (max-width: 900px) {
+  .eccomercepackheading {
+    color: var(--text-2, #000);
+  }
+}
+
+.custompacktext {
+  font-size: 20px;
+  text-align: justify;
+  margin-top: 15px;
+}
+
+.popup {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000; /* Ensures the popup is on top of other content */
+}
+
+.popupcontent {
+  background-color: white;
+  /* padding: 20px; */
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+.closebtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
